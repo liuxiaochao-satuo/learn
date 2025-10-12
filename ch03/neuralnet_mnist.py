@@ -1,6 +1,6 @@
 # coding: utf-8
 import sys, os
-sys.path.append(os.pardir)  # 为了导入父目录的文件而进行的设定
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # 为了导入父目录的文件而进行的设定
 import numpy as np
 import pickle
 from dataset.mnist import load_mnist
@@ -13,7 +13,8 @@ def get_data():
 
 
 def init_network():
-    with open("sample_weight.pkl", 'rb') as f:
+    weight_path = os.path.join(os.path.dirname(__file__), "sample_weight.pkl")
+    with open(weight_path, 'rb') as f:
         network = pickle.load(f)
     return network
 
