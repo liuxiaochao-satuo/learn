@@ -28,9 +28,11 @@ def MSE(y, t):
     return 0.5 * np.sum((y - t) ** 2)
 
 def CEE(y, t):
+    #保证输入统一为2维
     if y.ndim == 1:
-        t = t.resharpe(1, t.size)
-        y = y.resharpe(1, y.size)
+        t = t.reshape(1, t.size)
+        y = y.reshape(1, y.size)
+    #将one-hot表示转换为正确解标签
     if t.size == y.size:
         t = t.argmax(axis=1)
     batch_size = y.shape[0]
