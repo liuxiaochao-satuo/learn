@@ -1,6 +1,6 @@
 # coding: utf-8
 import sys, os
-sys.path.append(os.pardir) # 为了导入父目录的文件而进行的设定
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # 为了导入父目录的文件而进行的设定
 import numpy as np
 from collections import OrderedDict
 from common.layers import *
@@ -49,7 +49,8 @@ class MultiLayerNetExtend:
             if self.use_batchnorm:
                 self.params['gamma' + str(idx)] = np.ones(hidden_size_list[idx-1])
                 self.params['beta' + str(idx)] = np.zeros(hidden_size_list[idx-1])
-                self.layers['BatchNorm' + str(idx)] = BatchNormalization(self.params['gamma' + str(idx)], self.params['beta' + str(idx)])
+                self.layers['BatchNorm' + str(idx)] = BatchNormalization(self.params['gamma' + str(idx)], 
+                                                                         self.params['beta' + str(idx)])
                 
             self.layers['Activation_function' + str(idx)] = activation_layer[activation]()
             
