@@ -50,4 +50,124 @@ class MultiLayerNetExtend:
                 self.params['beta' + str(idx)] = np.zeros(hidden_size_list[idx-1])
                 self.layers['BatchNorm' + str(idx)] = BatchNormalization(self.params['gama' + str(idx)],
                                                                          self.params['beta' + str(idx)])
-                 
+            self.layers['Activation_function' + str(idx)] = activation_layer[activation]()
+
+            if self.use_dropout:
+                self.layers['Dropout' + str(idx)] = Dropout(dropout_ration)
+
+        idx = self.hidden_layer_num + 1
+        self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)], self.params['b' + str(idx)])
+
+        self.last_layer = SoftmaxWithLoss()
+    
+    def __init_weight(self, weight_init_std):
+        """
+        设定权重的初始值
+        Parameters
+        ----------
+        weight_init_std : 指定权重的标准差（e.g. 0.01）
+            指定'relu'或'he'的情况下设定“He的初始值”
+            指定'sigmoid'或'xavier'的情况下设定“Xavier的初始值”
+        """
+        all_size_list = [self.input_size] + self.hidden_size_list + [self.output_size]
+        for idx in range (1, len(all_size_list)):
+            scale = weight_init_std
+            if str(weight_init_std).lower() in ('relu', 'he'):
+                scale = np.sqrt(2.0 / all_size_list[idx - 1])
+            elif str(weight_init_std).lower() in ('sigmoid', 'xavier'):
+                scale = np.sqrt(1.0 / all_size_list[idx - 1])
+
+            self.params['W' + str(idx)] = scale * np.random.randn(all_size_list[idx - 1], all_size_list[idx])
+            self.params['b' + str(idx)] = np.zeros(all_size_list[idx])
+
+    def predict(self, x, train_flg=False):
+        """
+        进行预测
+        """
+        for key, layer in self.layers.items():
+            if 'Dropout' in key or 'BatchNorm' in key:
+                x = layer.forward(x, train_flg)
+            else:
+                x = layer.forward(x)
+
+        return x
+    
+    def loss(self, x, t, train_flg=False):
+        """
+        求损失函数
+        参数x是输入数据，t是真实标签
+        """
+        y = self.predict(x, train_flg)
+
+        weight_decay = 0
+        for idx in range(1, self.hidden_layer_num + 2):
+            W = self.params['W' + str(idx)]
+            weight_decay += 0.5 * self.weight_decay_lambda * np.sum(W**2)
+
+        return self.last_layer.forward(y, t) + weight_decay
+    
+    def accuracy(self, X, T):
+        """
+        求准确率
+        """
+        Y = self.predict(X, train_flg=False)
+        Y = np.argmax(Y, axis=1)
+
+        if T.ndim != 1:
+            T = np.argmax(T, axis=1)
+        accuracy = np.sum(Y == T) / float(X.shape[0])
+
+        return accuracy
+    
+    def numerical_gradient(self, X, T):
+        """
+        求梯度（数值微分）
+        Parameters
+        ----------
+        X : 输入数据
+        T : 真实标签
+        Return
+        -------
+        具有各层权重和偏置梯度的字典变量
+            grads['W1']、grads['W2']、...是各层的权重
+            grads['b1']、grads['b2']、...是各层的偏置
+        """
+        loss_W = lambda W: self.loss(X, T, train_flg=True)
+
+        grads = {}
+        for idx in range(1, self.hidden_layer_num+2):
+            grads['W' + str(idx)] = numerical_gradient(loss_W, self.params['W' + str(idx)])
+            grads['b' + str(idx)] = numerical_gradient(loss_W, self.params['b' + str(idx)])
+
+            if self.use_batchnorm and idx != self.hidden_layer_num+1:
+                grads['gama' + str(idx)] = numerical_gradient(loss_W, self.params['gama' + str(idx)])
+                grads['beta' + str(idx)] = numerical_gradient(loss_W, self.params['beta' + str(idx)])
+
+        return grads
+    
+    def gradient(self, x, t):
+        """
+        求梯度（误差反向传播法）
+        """
+        self.loss(x, t, train_flg=True)
+
+        # backward
+        dout = 1
+        dout = self.last_layer.backward(dout)
+
+        layers = list(self.layers.values())
+        layers.reverse()
+        for layer in layers:
+            dout = layer.backward(dout)
+
+        # 设定各层的梯度
+        grads = {}
+        for idx in range(1, self.hidden_layer_num+2):
+            grads['W' + str(idx)] = self.layers['Affine' + str(idx)].dW + self.weight_decay_lambda * self.params['W' + str(idx)]
+            grads['b' + str(idx)] = self.layers['Affine' + str(idx)].db
+
+            if self.use_batchnorm and idx != self.hidden_layer_num+1:
+                grads['gama' + str(idx)] = self.layers['BatchNorm' + str(idx)].dgama
+                grads['beta' + str(idx)] = self.layers['BatchNorm' + str(idx)].dbeta
+
+        return grads
