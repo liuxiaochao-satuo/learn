@@ -37,7 +37,7 @@ class MultiLayerNetExtend:
         self.params = {}
 
         # 初始化权重
-        self.__init__weight(weight_init_std)
+        self.__init_weight(weight_init_std)
 
         # 生成层
         activation_layer = {'sigmoid': Sigmoid, 'relu': Relu}
@@ -46,9 +46,9 @@ class MultiLayerNetExtend:
             self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)],
                                                       self.params['b' + str(idx)])
             if self.use_batchnorm:
-                self.params['gama' + str(idx)] = np.ones(hidden_size_list[idx-1])
+                self.params['gamma' + str(idx)] = np.ones(hidden_size_list[idx-1])
                 self.params['beta' + str(idx)] = np.zeros(hidden_size_list[idx-1])
-                self.layers['BatchNorm' + str(idx)] = BatchNormalization(self.params['gama' + str(idx)],
+                self.layers['BatchNorm' + str(idx)] = BatchNormalization(self.params['gamma' + str(idx)], 
                                                                          self.params['beta' + str(idx)])
             self.layers['Activation_function' + str(idx)] = activation_layer[activation]()
 
@@ -140,7 +140,7 @@ class MultiLayerNetExtend:
             grads['b' + str(idx)] = numerical_gradient(loss_W, self.params['b' + str(idx)])
 
             if self.use_batchnorm and idx != self.hidden_layer_num+1:
-                grads['gama' + str(idx)] = numerical_gradient(loss_W, self.params['gama' + str(idx)])
+                grads['gamma' + str(idx)] = numerical_gradient(loss_W, self.params['gamma' + str(idx)])
                 grads['beta' + str(idx)] = numerical_gradient(loss_W, self.params['beta' + str(idx)])
 
         return grads
@@ -167,7 +167,7 @@ class MultiLayerNetExtend:
             grads['b' + str(idx)] = self.layers['Affine' + str(idx)].db
 
             if self.use_batchnorm and idx != self.hidden_layer_num+1:
-                grads['gama' + str(idx)] = self.layers['BatchNorm' + str(idx)].dgama
+                grads['gamma' + str(idx)] = self.layers['BatchNorm' + str(idx)].dgamma
                 grads['beta' + str(idx)] = self.layers['BatchNorm' + str(idx)].dbeta
 
         return grads
