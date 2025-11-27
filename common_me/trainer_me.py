@@ -8,7 +8,7 @@ class Trainer:
     进行神经网络训练的类
     """
     def __init__(self, network, x_train, t_train, x_test, t_test,
-                 epoch=20, mini_batch_size=100,
+                 epochs=20, mini_batch_size=100,
                  optimizer='SGD', optimizer_param={'lr':0.01},
                  evaluate_sample_num_per_epoch=None, verbose=True):
         self.network = network
@@ -16,7 +16,7 @@ class Trainer:
         self.t_train = t_train
         self.x_test = x_test
         self.t_test = t_test
-        self.epochs = epoch
+        self.epochs = epochs
         self.batch_size = mini_batch_size
         self.evaluate_sample_num_per_epoch = evaluate_sample_num_per_epoch
         self.verbose = verbose
@@ -28,6 +28,7 @@ class Trainer:
 
         self.train_size = x_train.shape[0]
         self.iter_per_epoch = max(self.train_size / mini_batch_size, 1)
+        self.max_iter = int(self.epochs * self.iter_per_epoch)
         self.current_iter = 0
         self.current_epoch = 0
 
