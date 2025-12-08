@@ -270,10 +270,10 @@ class Pooling:
 
         pool_size = self.pool_h * self.pool_w
         dmax = np.zeros((dout.size, pool_size))
-        dmax[np.arrange(self.arg_max.size), self.arg_max.flatten()] = dout.flatten()
+        dmax[np.arange(self.arg_max.size), self.arg_max.flatten()] = dout.flatten()
         dmax = dmax.reshape(dout.shape + (pool_size,))
 
-        dcol = dmax.reshape(dmax.shape[0] * max.shape[1] * max.shape[2], -1)
+        dcol = dmax.reshape(dmax.shape[0] * dmax.shape[1] * dmax.shape[2], -1)
         dx = col2im(dcol, self.x.shape, self.pool_h, self.pool_w, self.stride, self.pad)
 
         return dx
