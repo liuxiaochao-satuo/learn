@@ -1,24 +1,22 @@
-# coding: utf-8
 import sys, os
+
+from ch08.train_deepnet import t_test
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # 为了导入父目录的文件而进行的设定
 import numpy as np
 import matplotlib.pyplot as plt
-from deep_convnet import DeepConvNet
+from deep_convnet_me import DeepConvNet
 from dataset.mnist import load_mnist
-
 
 (x_train, t_train), (x_test, t_test) = load_mnist(flatten=False)
 
 network = DeepConvNet()
-# 使用基于脚本所在目录的路径，确保无论从哪里运行都能找到文件
-params_path = os.path.join(os.path.dirname(__file__), "deep_convnet_params.pkl")
-network.load_params(params_path)
+network.load_params('deep_convnet_params_me.pkl')
 
 sampled = 10000 # 为了实现高速化
 x_test = x_test[:sampled]
 t_test = t_test[:sampled]
 
-print("caluculate accuracy (float64) ... ")
+print('caluculate accuracy (float64) ... ')
 print(network.accuracy(x_test, t_test))
 
 # 转换为float16型
@@ -26,5 +24,5 @@ x_test = x_test.astype(np.float16)
 for param in network.params.values():
     param[...] = param.astype(np.float16)
 
-print("caluculate accuracy (float16) ... ")
+print('caluculate accuracy (float16) ... ')
 print(network.accuracy(x_test, t_test))

@@ -1,7 +1,7 @@
 from re import L
 import sys, os
 
-from ch08.half_float_network import param
+from ch08_me.half_float_network_me import param
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # 为了导入父目录的文件而进行的设定
 import pickle
 import numpy as np
@@ -111,7 +111,7 @@ class DeepConvNet:
 
         # backward
         dout = 1
-        dout = self.last.layer.backward(dout)
+        dout = self.last_layer.backward(dout)
 
         tmp_layers = self.layers.copy()
         tmp_layers.reverse()
@@ -127,7 +127,7 @@ class DeepConvNet:
 
         return grads
 
-    def save_params(self, file_name='params,pkl'):
+    def save_params(self, file_name='params.pkl'):
         params = {}
         for key, val in self.params.items():
             params[key] = val
